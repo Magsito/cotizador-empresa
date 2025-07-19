@@ -107,47 +107,52 @@ async function exportToPDF() {
   doc.setFont("helvetica", "italic");
   doc.text("Generado automáticamente por el sistema de cotizaciones.", 14, y);
 
-  // ----------- ENVÍO A GOOGLE SHEETS -------------
+  // Envío a Google Sheets — uno por uno
   try {
-    const payload = [];
-
     // Productos individuales
     for (const p of products) {
-      payload.push({
-        number: number,
-        date: date,
+      const row = {
+        number,
+        date,
         product: p.name,
-        quantity: p.quantity.toString(),
+        quantity: String(p.quantity),
         price: p.price.toFixed(2),
         total_product: (p.quantity * p.price).toFixed(2),
         subtotal: "",
         igv: "",
         total: ""
+      };
+
+      await fetch("https://sheetdb.io/api/v1/04jrhqgn3fjmd", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data: [row] })
       });
     }
 
-    // Totales generales (última fila)
-    payload.push({
-      number: number,
-      date: date,
+    // Totales finales
+    const resumen = {
+      number,
+      date,
       product: "",
       quantity: "",
       price: "",
       total_product: "",
-      subtotalfor (const row of payload) {
-  await fetch("https://sheetdb.io/api/v1/04jrhqgn3fjmd", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ data: [row] })  // <<< envía uno por uno
-  });
-}
-subtotal.toFixed(2),
+      subtotal: subtotal.toFixed(2),
       igv: igv.toFixed(2),
       total: total.toFixed(2)
+    };
+
+    await fetch("https://sheetdb.io/api/v1/04jrhqgn3fjmd", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ data: [resumen] })
     });
+
+  } catch (error) {
+    alert("Error al enviar la cotización a Google Sheets.");
+    console.error(error);
+  }
 
   doc.save(`${number}.pdf`);
 }
-
