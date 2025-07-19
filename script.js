@@ -107,48 +107,51 @@ async function exportToPDF() {
   doc.setFont("helvetica", "italic");
   doc.text("Generado automáticamente por el sistema de cotizaciones.", 14, y);
 
-  // Envío a Google Sheets - NUEVO FORMATO
+  // ----------- ENVÍO A GOOGLE SHEETS -------------
   try {
- const payload = [];
+    const payload = [];
 
-products.forEach(p => {
-  payload.push({
-    number,                     // ✔️ en columna "number"
-    date,                       // ✔️ en columna "date"
-    product: p.name,            // ✔️ en columna "product"
-    quantity: String(p.quantity), // ✔️ en columna "quantity"
-    price: p.price.toFixed(2),  // ✔️ en columna "price"
-    total_product: (p.quantity * p.price).toFixed(2), // ✔️
-    subtotal: "",               // vacíos aquí
-    igv: "",
-    total: ""
-  });
-});
+    // Productos individuales
+    for (const p of products) {
+      payload.push({
+        number: number,
+        date: date,
+        product: p.name,
+        quantity: p.quantity.toString(),
+        price: p.price.toFixed(2),
+        total_product: (p.quantity * p.price).toFixed(2),
+        subtotal: "",
+        igv: "",
+        total: ""
+      });
+    }
 
-payload.push({
-  number,
-  date,
-  product: "",
-  quantity: "",
-  price: "",
-  total_product: "",
-  subtotal: subtotal.toFixed(2),
-  igv: igv.toFixed(2),
-  total: total.toFixed(2)
-});
+    // Totales generales (última fila)
+    payload.push({
+      number: number,
+      date: date,
+      product: "",
+      quantity: "",
+      price: "",
+      total_product: "",
+      subtotal: subtotal.toFixed(2),
+      igv: igv.toFixed(2),
+      total: total.toFixed(2)
+    });
 
-  await fetch("https://sheetdb.io/api/v1/04jrhqgn3fjmd", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ data: payload })
-  });
+    await fetch("https://sheetdb.io/api/v1/04jrhqgn3fjmd", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ data: payload })
+    });
 
-} catch (error) {
-  alert("Error al enviar la cotización a Google Sheets.");
-  console.error(error);
-}
+  } catch (error) {
+    alert("Error al enviar la cotización a Google Sheets.");
+    console.error(error);
+  }
 
   doc.save(`${number}.pdf`);
 }
+
