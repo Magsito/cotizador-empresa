@@ -10,7 +10,7 @@ function addProduct() {
     return;
   }
 
-  products = [{ name, quantity, price }]; // solo un producto
+  products = [{ name, quantity, price }]; // Solo se guarda un producto por cotización
   renderTable();
   clearInputs();
 }
@@ -63,6 +63,7 @@ async function exportToPDF() {
   const igv = subtotal * 0.18;
   const total = subtotal + igv;
 
+  // PDF
   let y = 20;
   doc.setFontSize(16);
   doc.text("Cotización", 105, y, { align: "center" });
@@ -102,20 +103,20 @@ async function exportToPDF() {
   doc.setFont("helvetica", "italic");
   doc.text("Generado automáticamente por el sistema de cotizaciones.", 14, y);
 
-  // Envío a Google Sheets: solo una fila
-  try {
-    const payload = [{
-      number,
-      date,
-      product: p.name,
-      quantity: p.quantity,
-      price: p.price.toFixed(2),
-      total_product: (p.quantity * p.price).toFixed(2),
-      subtotal: subtotal.toFixed(2),
-      igv: igv.toFixed(2),
-      total: total.toFixed(2)
-    }];
+  // ENVÍO - 1 fila, todos los datos completos
+  const payload = [{
+    number,
+    date,
+    product: p.name,
+    quantity: p.quantity,
+    price: p.price.toFixed(2),
+    total_product: (p.quantity * p.price).toFixed(2),
+    subtotal: subtotal.toFixed(2),
+    igv: igv.toFixed(2),
+    total: total.toFixed(2)
+  }];
 
+  try {
     await fetch("https://sheetdb.io/api/v1/04jrhqgn3fjmd", {
       method: "POST",
       headers: {
@@ -123,7 +124,6 @@ async function exportToPDF() {
       },
       body: JSON.stringify({ data: payload })
     });
-
   } catch (error) {
     alert("Error al enviar la cotización a Google Sheets.");
     console.error(error);
