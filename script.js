@@ -48,9 +48,16 @@ function clearInputs() {
   document.getElementById("price").value = "";
 }
 
+let cotizacionCount = 0;
+
 async function exportToPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
+
+  // Crea número de cotización incremental
+  cotizacionCount++;
+  const number = `C-${cotizacionCount.toString().padStart(4, "0")}`;
+  const date = new Date().toLocaleDateString();
 
   let y = 20;
 
@@ -59,7 +66,8 @@ async function exportToPDF() {
 
   y += 10;
   doc.setFontSize(12);
-  doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, y);
+  doc.text(`Número: ${number}`, 14, y);
+  doc.text(`Fecha: ${date}`, 140, y);
 
   y += 10;
   doc.text("Productos:", 14, y);
@@ -101,6 +109,30 @@ async function exportToPDF() {
   doc.setFont("helvetica", "italic");
   doc.text("Generado automáticamente por el sistema de cotizaciones.", 14, y);
 
-  doc.save("cotizacion.pdf");
-}
+  // ↓↓↓ ENVÍO A GOOGLE SHEETS ↓↓↓
+  const payload = {
+    number,
+    date,
+    products,
+    subtotal,
+    igv,
+    total
+  };
 
+  try {
+    await fetch("https://script.google.com/macros/s/AKfycbze9IKyrZk5Ig7ycwBpo1XkTzttA6TemLlSck-5hU9v16AwFvdmMo7LqxDyYqK-nkmgRA/exec", {
+      method: "POST",
+      body: JSON.stringify(payload),
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+    console.log("Cotización enviada a Google Sheets");
+  } catch (err) {
+    console.error("Error al enviar cotización:", err);
+    alert("No se pudo guardar la cotización en Google Sheets.");
+  }
+
+  // ↓↓↓ GENERA PDF ↓↓↓
+  doc.save(`${number}.pdf`);
+}
