@@ -10,7 +10,7 @@ function addProduct() {
     return;
   }
 
-  products = [{ name, quantity, price }]; // Solo se guarda un producto por cotización
+  products = [{ name, quantity, price }]; // Un solo producto por cotización
   renderTable();
   clearInputs();
 }
@@ -59,7 +59,8 @@ async function exportToPDF() {
   const date = new Date().toLocaleDateString();
 
   const p = products[0];
-  const subtotal = p.quantity * p.price;
+  const totalProducto = p.quantity * p.price;
+  const subtotal = totalProducto;
   const igv = subtotal * 0.18;
   const total = subtotal + igv;
 
@@ -88,7 +89,7 @@ async function exportToPDF() {
   doc.text(p.name, 14, y);
   doc.text(String(p.quantity), 80, y);
   doc.text(`S/ ${p.price.toFixed(2)}`, 110, y);
-  doc.text(`S/ ${(p.quantity * p.price).toFixed(2)}`, 160, y);
+  doc.text(`S/ ${totalProducto.toFixed(2)}`, 160, y);
 
   y += 15;
   doc.setFont("helvetica", "bold");
@@ -103,14 +104,14 @@ async function exportToPDF() {
   doc.setFont("helvetica", "italic");
   doc.text("Generado automáticamente por el sistema de cotizaciones.", 14, y);
 
-  // ENVÍO - 1 fila, todos los datos completos
+  // Enviar UNA SOLA FILA con todos los campos completos
   const payload = [{
     number,
     date,
     product: p.name,
-    quantity: p.quantity,
+    quantity: p.quantity.toString(),
     price: p.price.toFixed(2),
-    total_product: (p.quantity * p.price).toFixed(2),
+    total_product: totalProducto.toFixed(2),
     subtotal: subtotal.toFixed(2),
     igv: igv.toFixed(2),
     total: total.toFixed(2)
