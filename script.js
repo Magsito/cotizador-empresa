@@ -134,23 +134,19 @@ async function exportToPDF() {
       quantity: "",
       price: "",
       total_product: "",
-      subtotal: subtotal.toFixed(2),
+      subtotalfor (const row of payload) {
+  await fetch("https://sheetdb.io/api/v1/04jrhqgn3fjmd", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ data: [row] })  // <<< envía uno por uno
+  });
+}
+subtotal.toFixed(2),
       igv: igv.toFixed(2),
       total: total.toFixed(2)
     });
-
-    await fetch("https://sheetdb.io/api/v1/04jrhqgn3fjmd", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ data: payload })
-    });
-
-  } catch (error) {
-    alert("Error al enviar la cotización a Google Sheets.");
-    console.error(error);
-  }
 
   doc.save(`${number}.pdf`);
 }
