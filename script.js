@@ -10,7 +10,7 @@ function addProduct() {
     return;
   }
 
-  products.push({ name, quantity, price });
+  products = [{ name, quantity, price }]; // solo un producto
   renderTable();
   clearInputs();
 }
@@ -58,6 +58,11 @@ async function exportToPDF() {
   const number = `C-${cotizacionCount.toString().padStart(4, "0")}`;
   const date = new Date().toLocaleDateString();
 
+  const p = products[0];
+  const subtotal = p.quantity * p.price;
+  const igv = subtotal * 0.18;
+  const total = subtotal + igv;
+
   let y = 20;
   doc.setFontSize(16);
   doc.text("Cotización", 105, y, { align: "center" });
@@ -78,35 +83,11 @@ async function exportToPDF() {
   doc.text("Total", 160, y);
   doc.setFont("helvetica", "normal");
 
-  let subtotal = 0;
-
-  const payload = [];
-
-  products.forEach(p => {
-    const totalProduct = p.quantity * p.price;
-    subtotal += totalProduct;
-
-    y += 8;
-    doc.text(p.name, 14, y);
-    doc.text(String(p.quantity), 80, y);
-    doc.text(`S/ ${p.price.toFixed(2)}`, 110, y);
-    doc.text(`S/ ${totalProduct.toFixed(2)}`, 160, y);
-
-    payload.push({
-      number,
-      date,
-      product: p.name,
-      quantity: p.quantity,
-      price: p.price.toFixed(2),
-      total_product: totalProduct.toFixed(2),
-      subtotal: "",
-      igv: "",
-      total: ""
-    });
-  });
-
-  const igv = subtotal * 0.18;
-  const total = subtotal + igv;
+  y += 8;
+  doc.text(p.name, 14, y);
+  doc.text(String(p.quantity), 80, y);
+  doc.text(`S/ ${p.price.toFixed(2)}`, 110, y);
+  doc.text(`S/ ${(p.quantity * p.price).toFixed(2)}`, 160, y);
 
   y += 15;
   doc.setFont("helvetica", "bold");
@@ -121,20 +102,20 @@ async function exportToPDF() {
   doc.setFont("helvetica", "italic");
   doc.text("Generado automáticamente por el sistema de cotizaciones.", 14, y);
 
-  // Agregar fila de totales al final (alineada en una nueva fila)
-  payload.push({
-    number,
-    date,
-    product: "",
-    quantity: "",
-    price: "",
-    total_product: "",
-    subtotal: subtotal.toFixed(2),
-    igv: igv.toFixed(2),
-    total: total.toFixed(2)
-  });
-
+  // Envío a Google Sheets: solo una fila
   try {
+    const payload = [{
+      number,
+      date,
+      product: p.name,
+      quantity: p.quantity,
+      price: p.price.toFixed(2),
+      total_product: (p.quantity * p.price).toFixed(2),
+      subtotal: subtotal.toFixed(2),
+      igv: igv.toFixed(2),
+      total: total.toFixed(2)
+    }];
+
     await fetch("https://sheetdb.io/api/v1/04jrhqgn3fjmd", {
       method: "POST",
       headers: {
@@ -142,6 +123,7 @@ async function exportToPDF() {
       },
       body: JSON.stringify({ data: payload })
     });
+
   } catch (error) {
     alert("Error al enviar la cotización a Google Sheets.");
     console.error(error);
