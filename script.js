@@ -12,7 +12,7 @@ function addProduct() {
     return;
   }
 
-  products = [{ name, quantity, price }]; // Un solo producto por cotización
+  products = [{ name, quantity, price }];
   renderTable();
   clearInputs();
 }
@@ -27,12 +27,14 @@ function renderTable() {
     const total = p.quantity * p.price;
     subtotal += total;
 
-    const row = `<tr>
-      <td>${p.name}</td>
-      <td>${p.quantity}</td>
-      <td>S/ ${p.price.toFixed(2)}</td>
-      <td>S/ ${total.toFixed(2)}</td>
-    </tr>`;
+    const row = `
+      <tr>
+        <td>${p.name}</td>
+        <td>${p.quantity}</td>
+        <td>S/ ${p.price.toFixed(2)}</td>
+        <td>S/ ${(total).toFixed(2)}</td>
+      </tr>
+    `;
     tbody.innerHTML += row;
   });
 
@@ -50,103 +52,73 @@ function clearInputs() {
   document.getElementById("price").value = "";
 }
 
-let cotizacionCount = 0;
-
 async function exportToPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
+  console.log("Intentando guardar cotización...");
 
-  cotizacionCount++;
-  const number = `C-${cotizacionCount.toString().padStart(4, "0")}`;
-  const date = new Date().toLocaleDateString("es-PE");
+  const number = document.getElementById("quote-number").value;
+  const date = document.getElementById("quote-date").value;
   const p = products[0];
+
+  if (!number || !date || !p) {
+    alert("Faltan datos para guardar la cotización.");
+    return;
+  }
 
   const totalProducto = p.quantity * p.price;
   const subtotal = totalProducto;
   const igv = subtotal * 0.18;
   const total = subtotal + igv;
 
-  // Crear cotización en Supabase
-  const { data: quote, error: quoteError } = await supabase
-    .from("quotes")
-    .insert([
-      {
-        number,
-        date,
-        subtotal,
-        igv,
-        total
-      }
-    ])
-    .select()
-    .single();
+  console.log("Datos a enviar:", { number, date, subtotal, igv, total });
 
-  if (quoteError) {
-    alert("Error al guardar cotización.");
-    console.error(quoteError);
-    return;
-  }
+  try {
+    // Insertar cotización
+    const { data: quote, error: quoteError } = await supabase
+      .from("quotes")
+      .insert([{ number, date, subtotal, igv, total }])
+      .select()
+      .single();
 
-  const quoteId = quote.id;
+    if (quoteError) {
+      console.error("Error al guardar cotización:", quoteError);
+      alert("Error al guardar cotización.");
+      return;
+    }
 
-  // Crear ítem relacionado
-  const { error: itemError } = await supabase.from("quote_items").insert([
-    {
-      quote_id: quoteId,
+    const quoteId = quote.id;
+
+    console.log("Item a guardar:", {
+      quoteId,
       product: p.name,
       quantity: p.quantity,
       price: p.price,
-      total_product: totalProducto
+      totalProducto
+    });
+
+    // Insertar producto relacionado
+    const { error: itemError } = await supabase
+      .from("quote_items")
+      .insert([
+        {
+          quote_id: quoteId,
+          product: p.name,
+          quantity: p.quantity,
+          price: p.price,
+          total_product: totalProducto
+        }
+      ]);
+
+    if (itemError) {
+      console.error("Error al guardar producto:", itemError);
+      alert("Error al guardar producto.");
+      return;
     }
-  ]);
 
-  if (itemError) {
-    alert("Error al guardar producto.");
-    console.error(itemError);
-    return;
+    alert("Cotización guardada exitosamente.");
+  } catch (e) {
+    console.error("Error inesperado:", e);
+    alert("Error inesperado al guardar.");
   }
-
-  // Crear PDF
-  let y = 20;
-  doc.setFontSize(16);
-  doc.text("Cotización", 105, y, { align: "center" });
-
-  y += 10;
-  doc.setFontSize(12);
-  doc.text(`Número: ${number}`, 14, y);
-  doc.text(`Fecha: ${date}`, 140, y);
-
-  y += 10;
-  doc.text("Productos:", 14, y);
-
-  y += 10;
-  doc.setFont("helvetica", "bold");
-  doc.text("Producto", 14, y);
-  doc.text("Cant.", 80, y);
-  doc.text("P. Unit", 110, y);
-  doc.text("Total", 160, y);
-  doc.setFont("helvetica", "normal");
-
-  y += 8;
-  doc.text(p.name, 14, y);
-  doc.text(String(p.quantity), 80, y);
-  doc.text(`S/ ${p.price.toFixed(2)}`, 110, y);
-  doc.text(`S/ ${totalProducto.toFixed(2)}`, 160, y);
-
-  y += 15;
-  doc.setFont("helvetica", "bold");
-  doc.text(`Subtotal: S/ ${subtotal.toFixed(2)}`, 14, y);
-  y += 8;
-  doc.text(`IGV (18%): S/ ${igv.toFixed(2)}`, 14, y);
-  y += 8;
-  doc.text(`TOTAL: S/ ${total.toFixed(2)}`, 14, y);
-
-  y += 20;
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "italic");
-  doc.text("Generado automáticamente por el sistema de cotizaciones.", 14, y);
-
-  doc.save(`${number}.pdf`);
 }
 
 window.addProduct = addProduct;
