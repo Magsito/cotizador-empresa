@@ -1,3 +1,5 @@
+import { supabase } from './supabase.js';
+
 let products = [];
 
 function addProduct() {
@@ -56,15 +58,55 @@ async function exportToPDF() {
 
   cotizacionCount++;
   const number = `C-${cotizacionCount.toString().padStart(4, "0")}`;
-  const date = new Date().toLocaleDateString();
-
+  const date = new Date().toLocaleDateString("es-PE");
   const p = products[0];
+
   const totalProducto = p.quantity * p.price;
   const subtotal = totalProducto;
   const igv = subtotal * 0.18;
   const total = subtotal + igv;
 
-  // PDF
+  // Crear cotización en Supabase
+  const { data: quote, error: quoteError } = await supabase
+    .from("quotes")
+    .insert([
+      {
+        number,
+        date,
+        subtotal,
+        igv,
+        total
+      }
+    ])
+    .select()
+    .single();
+
+  if (quoteError) {
+    alert("Error al guardar cotización.");
+    console.error(quoteError);
+    return;
+  }
+
+  const quoteId = quote.id;
+
+  // Crear ítem relacionado
+  const { error: itemError } = await supabase.from("quote_items").insert([
+    {
+      quote_id: quoteId,
+      product: p.name,
+      quantity: p.quantity,
+      price: p.price,
+      total_product: totalProducto
+    }
+  ]);
+
+  if (itemError) {
+    alert("Error al guardar producto.");
+    console.error(itemError);
+    return;
+  }
+
+  // Crear PDF
   let y = 20;
   doc.setFontSize(16);
   doc.text("Cotización", 105, y, { align: "center" });
@@ -104,31 +146,8 @@ async function exportToPDF() {
   doc.setFont("helvetica", "italic");
   doc.text("Generado automáticamente por el sistema de cotizaciones.", 14, y);
 
-  // Enviar UNA SOLA FILA con todos los campos completos
-  const payload = [{
-    number,
-    date,
-    product: p.name,
-    quantity: p.quantity.toString(),
-    price: p.price.toFixed(2),
-    total_product: totalProducto.toFixed(2),
-    subtotal: subtotal.toFixed(2),
-    igv: igv.toFixed(2),
-    total: total.toFixed(2)
-  }];
-
-  try {
-    await fetch("https://sheetdb.io/api/v1/04jrhqgn3fjmd", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ data: payload })
-    });
-  } catch (error) {
-    alert("Error al enviar la cotización a Google Sheets.");
-    console.error(error);
-  }
-
   doc.save(`${number}.pdf`);
 }
+
+window.addProduct = addProduct;
+window.exportToPDF = exportToPDF;
