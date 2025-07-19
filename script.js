@@ -1,4 +1,5 @@
 let products = [];
+let cotizacionCount = 0;
 
 function addProduct() {
   const name = document.getElementById("name").value;
@@ -48,8 +49,6 @@ function clearInputs() {
   document.getElementById("price").value = "";
 }
 
-let cotizacionCount = 0;
-
 async function exportToPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
@@ -59,7 +58,6 @@ async function exportToPDF() {
   const date = new Date().toLocaleDateString();
 
   let y = 20;
-
   doc.setFontSize(16);
   doc.text("Cotización", 105, y, { align: "center" });
 
@@ -108,7 +106,7 @@ async function exportToPDF() {
   doc.setFont("helvetica", "italic");
   doc.text("Generado automáticamente por el sistema de cotizaciones.", 14, y);
 
-  // Envío a Google Sheets (o SheetDB)
+  // ENVÍO A GOOGLE SHEETS
   try {
     await fetch("https://sheetdb.io/api/v1/04jrhqgn3fjmd", {
       method: "POST",
@@ -130,13 +128,9 @@ async function exportToPDF() {
       })
     });
   } catch (error) {
-    console.error("Error al enviar la cotización:", error);
-    alert("Hubo un error al enviar la cotización.");
+    alert("Error al enviar la cotización a Google Sheets.");
+    console.error(error);
   }
 
   doc.save(`${number}.pdf`);
 }
-
-// Registrar funciones en el ámbito global para el HTML
-window.addProduct = addProduct;
-window.exportToPDF = exportToPDF;
