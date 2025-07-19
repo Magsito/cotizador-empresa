@@ -48,6 +48,59 @@ function clearInputs() {
   document.getElementById("price").value = "";
 }
 
-function exportToPDF() {
-  window.print(); // Lo cambiamos luego por un sistema real con jsPDF
+async function exportToPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  let y = 20;
+
+  doc.setFontSize(16);
+  doc.text("Cotización", 105, y, { align: "center" });
+
+  y += 10;
+  doc.setFontSize(12);
+  doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, y);
+
+  y += 10;
+  doc.text("Productos:", 14, y);
+
+  y += 10;
+  doc.setFont("helvetica", "bold");
+  doc.text("Producto", 14, y);
+  doc.text("Cant.", 80, y);
+  doc.text("P. Unit", 110, y);
+  doc.text("Total", 160, y);
+  doc.setFont("helvetica", "normal");
+
+  let subtotal = 0;
+
+  products.forEach(p => {
+    const total = p.quantity * p.price;
+    subtotal += total;
+
+    y += 8;
+    doc.text(p.name, 14, y);
+    doc.text(String(p.quantity), 80, y);
+    doc.text(`S/ ${p.price.toFixed(2)}`, 110, y);
+    doc.text(`S/ ${total.toFixed(2)}`, 160, y);
+  });
+
+  const igv = subtotal * 0.18;
+  const total = subtotal + igv;
+
+  y += 15;
+  doc.setFont("helvetica", "bold");
+  doc.text(`Subtotal: S/ ${subtotal.toFixed(2)}`, 14, y);
+  y += 8;
+  doc.text(`IGV (18%): S/ ${igv.toFixed(2)}`, 14, y);
+  y += 8;
+  doc.text(`TOTAL: S/ ${total.toFixed(2)}`, 14, y);
+
+  y += 20;
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "italic");
+  doc.text("Generado automáticamente por el sistema de cotizaciones.", 14, y);
+
+  doc.save("cotizacion.pdf");
 }
+
