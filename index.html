@@ -43,7 +43,8 @@
       <p><strong>Total: S/ <span id="total">0.00</span></strong></p>
     </div>
 
-    <button type="submit">Guardar Cotización</button>
+    <!-- CORREGIDO: Botón ahora dispara exportToPDF directamente -->
+    <button type="button" onclick="exportToPDF()">Guardar Cotización</button>
   </form>
 
   <script type="module" src="script.js"></script>
