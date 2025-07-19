@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cotizador</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <h1>Sistema de Cotizaciones</h1>
+  
+  <div id="product-form">
+    <input type="text" id="name" placeholder="Producto" />
+    <input type="number" id="quantity" placeholder="Cantidad" min="1" />
+    <input type="number" id="price" placeholder="Precio Unitario" step="0.01" min="0" />
+    <button onclick="addProduct()">Agregar</button>
+  </div>
+
+  <table id="quote-table">
+    <thead>
+      <tr>
+        <th>Producto</th>
+        <th>Cantidad</th>
+        <th>Precio Unitario</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div id="totals">
+    <p>Subtotal: S/ <span id="subtotal">0.00</span></p>
+    <p>IGV (18%): S/ <span id="igv">0.00</span></p>
+    <p><strong>Total: S/ <span id="total">0.00</span></strong></p>
+  </div>
+
+  <button onclick="exportToPDF()">Exportar a PDF</button>
+
+  <script src="script.js"></script>
+</body>
+</html>
