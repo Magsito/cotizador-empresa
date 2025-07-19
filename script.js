@@ -109,35 +109,33 @@ async function exportToPDF() {
 
   // Envío a Google Sheets - NUEVO FORMATO
   try {
-  const payload = [];
+ const payload = [];
 
-  // Productos individuales
-  products.forEach(p => {
-    payload.push({
-      number,
-      date,
-      product: p.name,
-      quantity: String(p.quantity),
-      price: p.price.toFixed(2),
-      total_product: (p.quantity * p.price).toFixed(2),
-      subtotal: "",
-      igv: "",
-      total: ""
-    });
-  });
-
-  // Fila final con los totales
+products.forEach(p => {
   payload.push({
-    number,
-    date,
-    product: "",
-    quantity: "",
-    price: "",
-    total_product: "",
-    subtotal: subtotal.toFixed(2),
-    igv: igv.toFixed(2),
-    total: total.toFixed(2)
+    number,                     // ✔️ en columna "number"
+    date,                       // ✔️ en columna "date"
+    product: p.name,            // ✔️ en columna "product"
+    quantity: String(p.quantity), // ✔️ en columna "quantity"
+    price: p.price.toFixed(2),  // ✔️ en columna "price"
+    total_product: (p.quantity * p.price).toFixed(2), // ✔️
+    subtotal: "",               // vacíos aquí
+    igv: "",
+    total: ""
   });
+});
+
+payload.push({
+  number,
+  date,
+  product: "",
+  quantity: "",
+  price: "",
+  total_product: "",
+  subtotal: subtotal.toFixed(2),
+  igv: igv.toFixed(2),
+  total: total.toFixed(2)
+});
 
   await fetch("https://sheetdb.io/api/v1/04jrhqgn3fjmd", {
     method: "POST",
