@@ -1,5 +1,4 @@
 let products = [];
-let cotizacionCount = 0;
 
 function addProduct() {
   const name = document.getElementById("name").value;
@@ -49,6 +48,8 @@ function clearInputs() {
   document.getElementById("price").value = "";
 }
 
+let cotizacionCount = 0;
+
 async function exportToPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
@@ -57,6 +58,7 @@ async function exportToPDF() {
   const number = `C-${cotizacionCount.toString().padStart(4, "0")}`;
   const date = new Date().toLocaleDateString();
 
+  // PDF
   let y = 20;
   doc.setFontSize(16);
   doc.text("Cotización", 105, y, { align: "center" });
@@ -106,38 +108,28 @@ async function exportToPDF() {
   doc.setFont("helvetica", "italic");
   doc.text("Generado automáticamente por el sistema de cotizaciones.", 14, y);
 
-  // ENVÍO CORRECTO A SHEETDB
+  // ENVÍO a Google Sheets - 1 sola fila
   try {
-    const payload = products.map(p => ({
-      number,
-      date,
-      product: p.name,
-      quantity: String(p.quantity),
-      price: p.price.toFixed(2),
-      total_product: (p.quantity * p.price).toFixed(2),
-      subtotal: "",
-      igv: "",
-      total: ""
-    }));
+    let p = products[0]; // solo 1 producto permitido por cotización (o solo se usa el primero)
 
-    payload.push({
+    const data = {
       number,
       date,
-      product: "",
-      quantity: "",
-      price: "",
-      total_product: "",
+      product: p ? p.name : "",
+      quantity: p ? String(p.quantity) : "",
+      price: p ? p.price.toFixed(2) : "",
+      total_product: p ? (p.quantity * p.price).toFixed(2) : "",
       subtotal: subtotal.toFixed(2),
       igv: igv.toFixed(2),
       total: total.toFixed(2)
-    });
+    };
 
     await fetch("https://sheetdb.io/api/v1/04jrhqgn3fjmd", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ data: payload })
+      body: JSON.stringify({ data: [data] })
     });
 
   } catch (error) {
