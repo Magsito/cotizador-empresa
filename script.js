@@ -107,37 +107,23 @@ async function exportToPDF() {
   doc.setFont("helvetica", "italic");
   doc.text("Generado automáticamente por el sistema de cotizaciones.", 14, y);
 
-  // Envío a Google Sheets
+  // Envío a Google Sheets - NUEVO FORMATO
   try {
-    const payload = [];
+    const productosTexto = products.map(p => {
+      return `${p.name} (Cant: ${p.quantity}, Precio: S/${p.price.toFixed(2)}, Total: S/${(p.quantity * p.price).toFixed(2)})`;
+    }).join(" | ");
 
-    // Productos individuales
-    for (const p of products) {
-      payload.push({
-        number,
-        date,
-        product: p.name,
-        quantity: String(p.quantity),
-        price: p.price.toFixed(2),
-        total_product: (p.quantity * p.price).toFixed(2),
-        subtotal: "",
-        igv: "",
-        total: ""
-      });
-    }
-
-    // Totales finales
-    payload.push({
+    const payload = [{
       number,
       date,
-      product: "",
+      product: productosTexto,
       quantity: "",
       price: "",
       total_product: "",
       subtotal: subtotal.toFixed(2),
       igv: igv.toFixed(2),
       total: total.toFixed(2)
-    });
+    }];
 
     await fetch("https://sheetdb.io/api/v1/04jrhqgn3fjmd", {
       method: "POST",
