@@ -120,7 +120,7 @@ async function exportToPDF() {
   };
 
   try {
-    await fetch("https://script.google.com/macros/s/AKfycbze9IKyrZk5Ig7ycwBpo1XkTzttA6TemLlSck-5hU9v16AwFvdmMo7LqxDyYqK-nkmgRA/exec", {
+    await fetch("https://script.google.com/u/0/home/projects/1oGoiEZ4NLAL7CoWyOOd4VByfnXJrkQJrTHaYcQ9TMMftM8U8rzWQ0-_p/edit", {
       method: "POST",
       body: JSON.stringify(payload),
       headers: {
