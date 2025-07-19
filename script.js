@@ -109,34 +109,48 @@ async function exportToPDF() {
 
   // Envío a Google Sheets - NUEVO FORMATO
   try {
-    const productosTexto = products.map(p => {
-      return `${p.name} (Cant: ${p.quantity}, Precio: S/${p.price.toFixed(2)}, Total: S/${(p.quantity * p.price).toFixed(2)})`;
-    }).join(" | ");
+  const payload = [];
 
-    const payload = [{
+  // Productos individuales
+  products.forEach(p => {
+    payload.push({
       number,
       date,
-      product: productosTexto,
-      quantity: "",
-      price: "",
-      total_product: "",
-      subtotal: subtotal.toFixed(2),
-      igv: igv.toFixed(2),
-      total: total.toFixed(2)
-    }];
-
-    await fetch("https://sheetdb.io/api/v1/04jrhqgn3fjmd", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ data: payload })
+      product: p.name,
+      quantity: String(p.quantity),
+      price: p.price.toFixed(2),
+      total_product: (p.quantity * p.price).toFixed(2),
+      subtotal: "",
+      igv: "",
+      total: ""
     });
+  });
 
-  } catch (error) {
-    alert("Error al enviar la cotización a Google Sheets.");
-    console.error(error);
-  }
+  // Fila final con los totales
+  payload.push({
+    number,
+    date,
+    product: "",
+    quantity: "",
+    price: "",
+    total_product: "",
+    subtotal: subtotal.toFixed(2),
+    igv: igv.toFixed(2),
+    total: total.toFixed(2)
+  });
+
+  await fetch("https://sheetdb.io/api/v1/04jrhqgn3fjmd", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ data: payload })
+  });
+
+} catch (error) {
+  alert("Error al enviar la cotización a Google Sheets.");
+  console.error(error);
+}
 
   doc.save(`${number}.pdf`);
 }
