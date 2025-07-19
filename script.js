@@ -107,26 +107,25 @@ async function exportToPDF() {
   doc.text("Generado automáticamente por el sistema de cotizaciones.", 14, y);
 
   // ENVÍO A GOOGLE SHEETS
-  try {
-    await fetch("https://sheetdb.io/api/v1/04jrhqgn3fjmd", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        data: products.map(p => ({
-          number,
-          date,
-          product: p.name,
-          quantity: p.quantity,
-          price: p.price,
-          total_product: (p.quantity * p.price).toFixed(2),
-          subtotal: subtotal.toFixed(2),
-          igv: igv.toFixed(2),
-          total: total.toFixed(2)
-        }))
-      })
-    });
+ await fetch("https://sheetdb.io/api/v1/04jrhqgn3fjmd", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    data: products.map(p => ({
+      number,
+      date,
+      product: p.name,
+      quantity: p.quantity,
+      price: p.price,
+      total_product: (p.quantity * p.price).toFixed(2),
+      subtotal: subtotal.toFixed(2),
+      igv: igv.toFixed(2),
+      total: total.toFixed(2)
+    }))
+  })
+});
   } catch (error) {
     alert("Error al enviar la cotización a Google Sheets.");
     console.error(error);
