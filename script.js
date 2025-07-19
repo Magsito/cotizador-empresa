@@ -108,42 +108,42 @@ async function exportToPDF() {
   doc.text("Generado automáticamente por el sistema de cotizaciones.", 14, y);
 
   // ↓↓↓ ENVÍO A GOOGLE SHEETS ↓↓↓
-try {
-  const payload = products.map(p => ({
-    number,
-    date,
-    product: p.name,
-    quantity: p.quantity,
-    price: p.price.toFixed(2),
-    total_product: (p.quantity * p.price).toFixed(2),
-    subtotal: "",  // dejar vacío aquí
-    igv: "",       // dejar vacío aquí
-    total: ""      // dejar vacío aquí
-  }));
+  try {
+    const payload = products.map(p => ({
+      number,
+      date,
+      product: p.name,
+      quantity: p.quantity,
+      price: p.price.toFixed(2),
+      total_product: (p.quantity * p.price).toFixed(2),
+      subtotal: "",  // vacío por fila
+      igv: "",
+      total: ""
+    }));
 
-  // Agregamos una fila adicional al final con los totales generales
-  payload.push({
-    number,
-    date,
-    product: "",      // campos vacíos para que se vea como resumen
-    quantity: "",
-    price: "",
-    total_product: "",
-    subtotal: subtotal.toFixed(2),
-    igv: igv.toFixed(2),
-    total: total.toFixed(2)
-  });
+    payload.push({
+      number,
+      date,
+      product: "",
+      quantity: "",
+      price: "",
+      total_product: "",
+      subtotal: subtotal.toFixed(2),
+      igv: igv.toFixed(2),
+      total: total.toFixed(2)
+    });
 
-  await fetch("https://sheetdb.io/api/v1/04jrhqgn3fjmd", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ data: payload })
-  });
-} catch (error) {
-  alert("Error al enviar la cotización a Google Sheets.");
-  console.error(error);
-}
+    await fetch("https://sheetdb.io/api/v1/04jrhqgn3fjmd", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ data: payload })
+    });
+  } catch (error) {
+    alert("Error al enviar la cotización a Google Sheets.");
+    console.error(error);
+  }
 
-doc.save(`${number}.pdf`);
+  doc.save(`${number}.pdf`);
+} // ← ESTA ES LA LLAVE QUE FALTABA
