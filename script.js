@@ -1,5 +1,4 @@
 let products = [];
-let cotizacionCount = 0;
 
 function addProduct() {
   const name = document.getElementById("name").value;
@@ -48,6 +47,8 @@ function clearInputs() {
   document.getElementById("quantity").value = "";
   document.getElementById("price").value = "";
 }
+
+let cotizacionCount = 0;
 
 async function exportToPDF() {
   const { jsPDF } = window.jspdf;
@@ -106,26 +107,27 @@ async function exportToPDF() {
   doc.setFont("helvetica", "italic");
   doc.text("Generado automáticamente por el sistema de cotizaciones.", 14, y);
 
-  // ENVÍO A GOOGLE SHEETS
- await fetch("https://sheetdb.io/api/v1/04jrhqgn3fjmd", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    data: products.map(p => ({
+  // Envío a Google Sheets
+  try {
+    const rows = products.map(p => ({
       number,
       date,
       product: p.name,
-      quantity: p.quantity,
-      price: p.price,
+      quantity: p.quantity.toString(),
+      price: p.price.toFixed(2),
       total_product: (p.quantity * p.price).toFixed(2),
       subtotal: subtotal.toFixed(2),
       igv: igv.toFixed(2),
       total: total.toFixed(2)
-    }))
-  })
-});
+    }));
+
+    await fetch("https://sheetdb.io/api/v1/04jrhqgn3fjmd", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ data: rows })
+    });
   } catch (error) {
     alert("Error al enviar la cotización a Google Sheets.");
     console.error(error);
