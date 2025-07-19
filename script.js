@@ -58,7 +58,6 @@ async function exportToPDF() {
   const number = `C-${cotizacionCount.toString().padStart(4, "0")}`;
   const date = new Date().toLocaleDateString();
 
-  // PDF
   let y = 20;
   doc.setFontSize(16);
   doc.text("Cotización", 105, y, { align: "center" });
@@ -81,15 +80,29 @@ async function exportToPDF() {
 
   let subtotal = 0;
 
+  const payload = [];
+
   products.forEach(p => {
-    const total = p.quantity * p.price;
-    subtotal += total;
+    const totalProduct = p.quantity * p.price;
+    subtotal += totalProduct;
 
     y += 8;
     doc.text(p.name, 14, y);
     doc.text(String(p.quantity), 80, y);
     doc.text(`S/ ${p.price.toFixed(2)}`, 110, y);
-    doc.text(`S/ ${total.toFixed(2)}`, 160, y);
+    doc.text(`S/ ${totalProduct.toFixed(2)}`, 160, y);
+
+    payload.push({
+      number,
+      date,
+      product: p.name,
+      quantity: p.quantity,
+      price: p.price.toFixed(2),
+      total_product: totalProduct.toFixed(2),
+      subtotal: "",
+      igv: "",
+      total: ""
+    });
   });
 
   const igv = subtotal * 0.18;
@@ -108,30 +121,27 @@ async function exportToPDF() {
   doc.setFont("helvetica", "italic");
   doc.text("Generado automáticamente por el sistema de cotizaciones.", 14, y);
 
-  // ENVÍO a Google Sheets - 1 sola fila
+  // Agregar fila de totales al final (alineada en una nueva fila)
+  payload.push({
+    number,
+    date,
+    product: "",
+    quantity: "",
+    price: "",
+    total_product: "",
+    subtotal: subtotal.toFixed(2),
+    igv: igv.toFixed(2),
+    total: total.toFixed(2)
+  });
+
   try {
-    let p = products[0]; // solo 1 producto permitido por cotización (o solo se usa el primero)
-
-    const data = {
-      number,
-      date,
-      product: p ? p.name : "",
-      quantity: p ? String(p.quantity) : "",
-      price: p ? p.price.toFixed(2) : "",
-      total_product: p ? (p.quantity * p.price).toFixed(2) : "",
-      subtotal: subtotal.toFixed(2),
-      igv: igv.toFixed(2),
-      total: total.toFixed(2)
-    };
-
     await fetch("https://sheetdb.io/api/v1/04jrhqgn3fjmd", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ data: [data] })
+      body: JSON.stringify({ data: payload })
     });
-
   } catch (error) {
     alert("Error al enviar la cotización a Google Sheets.");
     console.error(error);
