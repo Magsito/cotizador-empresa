@@ -120,19 +120,23 @@ async function exportToPDF() {
   };
 
   try {
-    await fetch("https://script.google.com/macros/s/AKfycbze9IKyrZk5Ig7ycwBpo1XkTzttA6TemLlSck-5hU9v16AwFvdmMo7LqxDyYqK-nkmgRA/exec", {
-      method: "POST",
-      body: JSON.stringify(payload),
-      headers: {
-        "Content-Type": "application/json"
-      }
-    });
-    console.log("Cotización enviada a Google Sheets");
-  } catch (err) {
-    console.error("Error al enviar cotización:", err);
-    alert("No se pudo guardar la cotización en Google Sheets.");
-  }
+    await fetch("https://sheetdb.io/api/v1/04jrhqgn3fjmd", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    data: products.map(p => ({
+      number,
+      date,
+      product: p.name,
+      quantity: p.quantity,
+      price: p.price,
+      total_product: (p.quantity * p.price).toFixed(2),
+      subtotal: subtotal.toFixed(2),
+      igv: igv.toFixed(2),
+      total: total.toFixed(2)
+    }))
+  })
+});
 
-  // ↓↓↓ GENERA PDF ↓↓↓
-  doc.save(`${number}.pdf`);
-}
