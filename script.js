@@ -32,7 +32,7 @@ function renderTable() {
         <td>${p.name}</td>
         <td>${p.quantity}</td>
         <td>S/ ${p.price.toFixed(2)}</td>
-        <td>S/ ${(total).toFixed(2)}</td>
+        <td>S/ ${total.toFixed(2)}</td>
       </tr>
     `;
     tbody.innerHTML += row;
@@ -50,6 +50,16 @@ function clearInputs() {
   document.getElementById("name").value = "";
   document.getElementById("quantity").value = "";
   document.getElementById("price").value = "";
+}
+
+function clearQuoteForm() {
+  document.getElementById("quote-number").value = "";
+  document.getElementById("quote-date").value = "";
+  document.querySelector("#quote-table tbody").innerHTML = "";
+  document.getElementById("subtotal").textContent = "0.00";
+  document.getElementById("igv").textContent = "0.00";
+  document.getElementById("total").textContent = "0.00";
+  products = [];
 }
 
 async function exportToPDF() {
@@ -72,7 +82,6 @@ async function exportToPDF() {
   console.log("Datos a enviar:", { number, date, subtotal, igv, total });
 
   try {
-    // Insertar cotización
     const { data: quote, error: quoteError } = await supabase
       .from("quotes")
       .insert([{ number, date, subtotal, igv, total }])
@@ -87,15 +96,6 @@ async function exportToPDF() {
 
     const quoteId = quote.id;
 
-    console.log("Item a guardar:", {
-      quoteId,
-      product: p.name,
-      quantity: p.quantity,
-      price: p.price,
-      totalProducto
-    });
-
-    // Insertar producto relacionado
     const { error: itemError } = await supabase
       .from("quote_items")
       .insert([
@@ -115,6 +115,7 @@ async function exportToPDF() {
     }
 
     alert("Cotización guardada exitosamente.");
+    clearQuoteForm();
   } catch (e) {
     console.error("Error inesperado:", e);
     alert("Error inesperado al guardar.");
